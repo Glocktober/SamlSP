@@ -7,9 +7,10 @@ from .constants import *
 class   ResponseDecoder:
     """ Decode SAMLResponse data for convenient access """
 
-    def __init__(self, response_data, sp, israw=False):
+    def __init__(self, response_data, sp, israw=True):
 
         if israw:
+            # Must be b64decoded
             if type(response_data) is str:
                 response_data.encode('utf-8')
             response_data = b64decode(response_data)

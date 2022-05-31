@@ -135,7 +135,7 @@ class   SamlSP(Blueprint):
 
 
     def assertion_consumer_service(self):
-        """ Process SAMLResponse """
+        """ Process Http-POST SAMLResponse """
 
         rawResponse = request.form.get('SAMLResponse')
         relayState = request.form.get('RelayState')
@@ -145,41 +145,41 @@ class   SamlSP(Blueprint):
             abort(400, 'Bad or incomplete SAMLResponse')
 
         try:
-            sresp = ResponseDecoder(
+            saml_response = ResponseDecoder(
                     response_data= rawResponse, 
                     sp=self,
-                    israw=True
                 )
 
         except Exception as e:
             current_app.logger.error(f'Failed to parse SAMLResponse: {str(e)}', exc_info=True)
             abort(400, 'Unable to parse SAMLResponse')
 
-        if not sresp.status_ok:
+        if not saml_response.status_ok:
             # This is an error response
-            short_status = sresp.statusCode.split(':')[-1] or 'Unknown Error'
-            status_message = sresp.statusMessage or 'A problem occured'
+            short_status = saml_response.statusCode.split(':')[-1] or 'Unknown Error'
+            status_message = saml_response.statusMessage or 'A problem occured'
 
             abort(401, f'{status_message} [{short_status}]')
         
         try:
             # nothing in the response can be trusted until this is done:
-            sresp.validate_saml_signing(noexcept=False)
+            saml_response.validate_saml_signing(noexcept=False)
             
         except Exception as e:
             current_app.logger.error(f'Verifying response {str(e)}', exc_info=True)
             abort(400, 'Invalid signature on SAMLResponse')
         
         try:
-            current_app.logger.info(f'Verified response {sresp.responseId} for request {sresp.inResponseTo}')
-            if sresp.audience != self.sp_id:
-                raise Exception(f'Bad Audience: expected {self.sp_id} received {sresp.audience}')
+            current_app.logger.info(f'Verified response {saml_response.responseId} for request {saml_response.inResponseTo}')
+            
+            if saml_response.audience != self.sp_id:
+                raise Exception(f'Bad Audience: expected {self.sp_id} received {saml_response.audience}')
     
-            if sresp.issuer != self.idp_id:
-                raise Exception(f'Bad Issuer: expected {self.idp_id} received {sresp.issuer}')            
+            if saml_response.issuer != self.idp_id:
+                raise Exception(f'Bad Issuer: expected {self.idp_id} received {saml_response.issuer}')            
 
-            username = sresp.nameID
-            attrs = sresp.attributeStatement.copy()
+            username = saml_response.nameID
+            attrs = saml_response.attributeStatement.copy()
 
             # Run all the login hooks.
             for login_hook in self.login_hooks:
@@ -193,9 +193,9 @@ class   SamlSP(Blueprint):
         # set the final session values
         session['attributes'] = attrs
         session['username'] = username
-        session['nameID'] = sresp.nameID
+        session['nameID'] = saml_response.nameID
 
-        current_app.logger.info(f'SAMLResponse: {sresp.responseId} for "{username}" authenticated')
+        current_app.logger.info(f'SAMLResponse: {saml_response.responseId} for "{username}" authenticated')
 
         # Quo vidas?
         url = relayState
