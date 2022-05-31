@@ -9,7 +9,6 @@ def encodeSpMetaData(spbp, acsURL):
     """ Create XML Service Provider Metadata """
 
     spmeta = deepcopy(_template_SpMetaData)
-    print('in sp encoder')
 
     spmeta['EntityDescriptor']['@entityID'] = spbp.sp_id
     spssodescr = spmeta['EntityDescriptor']['SPSSODescriptor']
@@ -17,7 +16,6 @@ def encodeSpMetaData(spbp, acsURL):
     if spbp.sp_cert:
         spssodescr['@AuthnRequestsSigned'] = 'true'
         spssodescr['KeyDescriptor']['ds:KeyInfo']['ds:X509Data']['ds:X509Certificate'] = serialize_cert(spbp.sp_cert)
- 
     else:
         spssodescr['@AuthnRequestsSigned'] = 'false'
         del spssodescr['KeyDescriptor']

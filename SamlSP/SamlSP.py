@@ -14,6 +14,7 @@ from flask import (
 
 from .RequestEncoder import RequestEncoder
 from .ResponseDecoder import ResponseDecoder
+from .Metadata import loadIdPMetadata
 from .SPMetaEncoder import encodeSpMetaData
 from .SamlSerializer import SamlResponseSigner, SamlRequestSerializer
 
@@ -22,6 +23,8 @@ class   SamlSP(Blueprint):
     """ SAML Service Provider Flask Blueprint """
 
     def __init__(self, config, app=None, **kwargs):
+
+        config = loadIdPMetadata(config)
 
         self.sp_id = config.get('sp_id')
         self.idp_id = config.get('idp_id')
