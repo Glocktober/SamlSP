@@ -100,8 +100,8 @@ class   SamlSP(Blueprint):
     def validateSignedResponse(self, saml_response, noexcept=True):
         """ Validate Response Signing """
 
-        return self.verifier.verifySamlResponse(saml_response, noexcept)
-
+        return self.verifier.verifySignedSamlResponse(saml_response, noexcept)
+        
 
     def initiate_login(self,*, force_reauth=False, is_passive=False, relayState=None, reqid=None, **kwargs):
         """ Generate a SAMLRequest redirect """
