@@ -201,6 +201,7 @@ class   SamlSP(Blueprint):
         current_app.logger.info(f'SAMLResponse: {saml_response.responseId} for "{username}" authenticated')
 
         # Quo vidas?
+        reqId = saml_response.inResponseTo
         url = relayState
 
         stateDict = parse_qs(relayState)
@@ -209,7 +210,7 @@ class   SamlSP(Blueprint):
             if 'after' in stateDict:
                 key = stateDict['after'][0]
                 if key in self.after_auth_hooks:
-                    return self.after_auth_hooks[key](relayState=stateDict)
+                    return self.after_auth_hooks[key](reqId)
 
             elif 'next' in stateDict:
                 url = stateDict['next'][0]
